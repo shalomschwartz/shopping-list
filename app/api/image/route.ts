@@ -6,23 +6,25 @@ export async function GET(request: NextRequest) {
     return NextResponse.json({ error: "Missing query" }, { status: 400 });
   }
 
-  const apiKey = process.env.GOOGLE_API_KEY;
-  const cx = process.env.GOOGLE_CX;
-
-  if (!apiKey || !cx) {
+  const apiKey = process.env.PEXELS_API_KEY;
+  if (!apiKey) {
     return NextResponse.json({ error: "API not configured" }, { status: 500 });
   }
 
-  const url = `https://www.googleapis.com/customsearch/v1?key=${apiKey}&cx=${cx}&searchType=image&q=${encodeURIComponent(q)}&num=5`;
+  const url = `https://api.pexels.com/v1/search?query=${encodeURIComponent(q)}&per_page=5`;
 
-  const res = await fetch(url);
+  const res = await fetch(url, {
+    headers: { Authorization: apiKey },
+  });
+
   if (!res.ok) {
-    return NextResponse.json({ error: "Google API error" }, { status: 502 });
+    return NextResponse.json({ error: "Pexels API error" }, { status: 502 });
   }
 
   const data = await res.json();
-  const items: { link: string }[] = data.items ?? [];
-  const images = items.map((item) => item.link);
+  const images: string[] = (data.photos ?? []).map(
+    (p: { src: { medium: string } }) => p.src.medium
+  );
 
   return NextResponse.json({ images });
 }
