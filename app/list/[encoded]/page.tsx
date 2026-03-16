@@ -8,7 +8,7 @@ export default function ListPage({ params }: Props) {
   let items: { name: string; imageUrl: string }[] = [];
 
   try {
-    const json = decodeURIComponent(escape(atob(params.encoded)));
+    const json = decodeURIComponent(atob(params.encoded));
     items = JSON.parse(json);
   } catch {
     return (

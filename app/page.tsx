@@ -21,7 +21,7 @@ export default function Home() {
   }
 
   function getShareUrl() {
-    const encoded = btoa(unescape(encodeURIComponent(JSON.stringify(items))));
+    const encoded = btoa(encodeURIComponent(JSON.stringify(items)));
     return `${window.location.origin}/list/${encoded}`;
   }
 
