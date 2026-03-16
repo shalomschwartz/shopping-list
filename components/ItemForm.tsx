@@ -9,6 +9,7 @@ interface Props {
 
 export default function ItemForm({ onAdd }: Props) {
   const [name, setName] = useState("");
+  const [searchTerm, setSearchTerm] = useState("");
   const [imageUrl, setImageUrl] = useState("");
   const [imageOptions, setImageOptions] = useState<string[]>([]);
   const [loading, setLoading] = useState(false);
@@ -28,7 +29,7 @@ export default function ItemForm({ onAdd }: Props) {
         setImageOptions(data.images);
         setImageUrl(data.images[0]);
       } else {
-        setError("No image found. You can still add the item.");
+        setError("No image found — try searching with a different word below.");
       }
     } catch {
       setError("Could not fetch image.");
@@ -38,11 +39,22 @@ export default function ItemForm({ onAdd }: Props) {
   }
 
   function handleNameBlur() {
-    if (name.trim()) fetchImages(name.trim());
+    if (name.trim()) {
+      setSearchTerm(name.trim());
+      fetchImages(name.trim());
+    }
   }
 
   function handleNameKeyDown(e: React.KeyboardEvent<HTMLInputElement>) {
-    if (e.key === "Enter" && name.trim()) fetchImages(name.trim());
+    if (e.key === "Enter" && name.trim()) {
+      setSearchTerm(name.trim());
+      fetchImages(name.trim());
+    }
+  }
+
+  function handleRetrySearch(e: React.FormEvent) {
+    e.preventDefault();
+    if (searchTerm.trim()) fetchImages(searchTerm.trim());
   }
 
   function tryNextImage() {
@@ -60,6 +72,7 @@ export default function ItemForm({ onAdd }: Props) {
     setImageUrl("");
     setImageOptions([]);
     setImageIndex(0);
+    setSearchTerm("");
     setError("");
   }
 
@@ -73,6 +86,7 @@ export default function ItemForm({ onAdd }: Props) {
           onBlur={handleNameBlur}
           onKeyDown={handleNameKeyDown}
           placeholder="e.g. whole milk, sourdough bread…"
+          spellCheck={true}
           className="flex-1 border border-gray-200 rounded-xl px-4 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-green-400"
         />
         <button
@@ -88,31 +102,52 @@ export default function ItemForm({ onAdd }: Props) {
         <p className="text-sm text-gray-400 animate-pulse">Finding photo…</p>
       )}
 
-      {error && <p className="text-sm text-orange-400">{error}</p>}
+      {(imageUrl || error) && (
+        <div className="space-y-3">
+          {imageUrl && (
+            <div className="flex items-center gap-4">
+              {/* eslint-disable-next-line @next/next/no-img-element */}
+              <img
+                src={imageUrl}
+                alt={name}
+                className="w-20 h-20 object-cover rounded-xl border border-gray-100"
+                onError={(e) => {
+                  (e.target as HTMLImageElement).src =
+                    "https://placehold.co/80x80?text=?";
+                }}
+              />
+              <div className="flex flex-col gap-1">
+                <p className="text-xs text-gray-400">Photo preview</p>
+                {imageOptions.length > 1 && imageIndex < imageOptions.length - 1 && (
+                  <button
+                    onClick={tryNextImage}
+                    className="text-xs text-blue-500 hover:underline text-left"
+                  >
+                    Try a different photo →
+                  </button>
+                )}
+              </div>
+            </div>
+          )}
 
-      {imageUrl && (
-        <div className="flex items-center gap-4">
-          {/* eslint-disable-next-line @next/next/no-img-element */}
-          <img
-            src={imageUrl}
-            alt={name}
-            className="w-20 h-20 object-cover rounded-xl border border-gray-100"
-            onError={(e) => {
-              (e.target as HTMLImageElement).src =
-                "https://placehold.co/80x80?text=?";
-            }}
-          />
-          <div className="flex flex-col gap-1">
-            <p className="text-xs text-gray-400">Photo preview</p>
-            {imageOptions.length > 1 && imageIndex < imageOptions.length - 1 && (
-              <button
-                onClick={tryNextImage}
-                className="text-xs text-blue-500 hover:underline text-left"
-              >
-                Try a different photo →
-              </button>
-            )}
-          </div>
+          {error && <p className="text-sm text-orange-400">{error}</p>}
+
+          {/* Search differently */}
+          <form onSubmit={handleRetrySearch} className="flex gap-2">
+            <input
+              type="text"
+              value={searchTerm}
+              onChange={(e) => setSearchTerm(e.target.value)}
+              placeholder="Search with a different word…"
+              className="flex-1 border border-gray-200 rounded-xl px-3 py-2 text-xs focus:outline-none focus:ring-2 focus:ring-blue-300"
+            />
+            <button
+              type="submit"
+              className="text-xs bg-gray-100 hover:bg-gray-200 px-3 py-2 rounded-xl text-gray-600 font-medium"
+            >
+              Search
+            </button>
+          </form>
         </div>
       )}
     </div>
