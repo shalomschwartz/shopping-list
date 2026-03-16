@@ -18,7 +18,8 @@ export async function GET(request: NextRequest) {
   });
 
   if (!res.ok) {
-    return NextResponse.json({ error: "Pexels API error" }, { status: 502 });
+    const body = await res.text();
+    return NextResponse.json({ error: `Pexels error ${res.status}: ${body}` }, { status: 502 });
   }
 
   const data = await res.json();

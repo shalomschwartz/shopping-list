@@ -25,14 +25,16 @@ export default function ItemForm({ onAdd }: Props) {
     try {
       const res = await fetch(`/api/image?q=${encodeURIComponent(query)}`);
       const data = await res.json();
-      if (data.images?.length) {
+      if (data.error) {
+        setError(`Error: ${data.error}`);
+      } else if (data.images?.length) {
         setImageOptions(data.images);
         setImageUrl(data.images[0]);
       } else {
         setError("No image found — try searching with a different word below.");
       }
-    } catch {
-      setError("Could not fetch image.");
+    } catch (e) {
+      setError(`Could not fetch image: ${e}`);
     } finally {
       setLoading(false);
     }
